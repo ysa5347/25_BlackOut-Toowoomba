@@ -1,11 +1,11 @@
 # Terraform Code for AWS Web Project
 
-# Provider 설정
+# Provider settings
 provider "aws" {
   region = "us-east-1"
 }
 
-# S3 버킷 생성 (React 빌드 파일 배포용)
+# create S3 bucket (streamlit deploy)
 resource "aws_s3_bucket" "frontend_bucket" {
   bucket = "my-frontend-bucket"
   acl    = "public-read"
