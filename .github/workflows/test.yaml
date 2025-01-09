@@ -9,5 +9,10 @@ jobs:
   test:
     runs-on: ubuntu-latest
     steps:
+      - name: checkout
+        uses: actions/checkout@v4
+
       - name: pwd
-        run: pwd
+        run: |
+          pwd
+          ls -al
