@@ -24,17 +24,14 @@ jobs:
     - name: Checkout
       uses: actions/checkout@v3
       with: 
-        ref: ${{ github.event.push.base_ref }}
-        ssh-key: ${{ secrets.SSH_PRIVATE_KEY }}
-        persist-credentials: true
+        ref: ${{ github.event.pull_request.head_ref }}
 
     - name: Set vars and outputs
       id: vars
       with:
-        claim_branch: ${{ github.ref }}
+        target_branch: ${{ github.event.pull_request.base_ref }}
       run: |
         echo "sha_short=$(git rev-parse --short HEAD)" >> $GITHUB_OUTPUT
-        echo 
 
     - name: Check sha outputs
       run: echo ${{ steps.vars.outputs.sha_short }}
@@ -64,14 +61,14 @@ jobs:
       env:
         ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
         sha: ${{ steps.vars.outputs.sha_short }}
-        branch: ${{ github.ref_name }}
+        branch: ${{ github.event.pull_request.base_ref }}
         claim_branch: ${{ github.ref_name }}
         
       run: |
-        docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:main-${{ env.claim_branch }}-${{ env.sha }} --build-arg BRANCH=${{ env.branch }} .
-        docker push $ECR_REGISTRY/$ECR_REPOSITORY:main-${{ env.sha }}
-        echo "::set-output name=image::$ECR_REGISTRY/$ECR_REPOSITORY:main-${{ env.sha }}"
-    
+        docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:${{ env.target_branch }}-${{ env.claim_branch }}-${{ env.sha }} --build-arg BRANCH=${{ env.branch }} .
+        docker push $ECR_REGISTRY/$ECR_REPOSITORY:${{ env.target_branch }}-${{ env.claim_branch }}-${{ env.sha }}
+        echo "::set-output name=image::$ECR_REGISTRY/$ECR_REPOSITORY:${{ env.target_branch }}-${{ env.claim_branch }}-${{ env.sha }}"
+
     - name: Fill in the new image ID in the Amazon ECS task definition
       id: task-def
       uses: aws-actions/amazon-ecs-render-task-definition@v1
