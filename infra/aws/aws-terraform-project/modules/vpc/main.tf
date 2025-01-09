@@ -1,9 +1,9 @@
-resource "aws_vpc" "25_blackout_toowoomba_vpc" {
+resource "aws_vpc" "blackout_toowoomba_vpc" {
   cidr_block = var.vpc_cidr
   enable_dns_support = true
   enable_dns_hostnames = true
   tags = {
-    Name = "25_blackout_toowoomba_vpc"
+    Name = "blackout_toowoomba_vpc"
   }
 }
 

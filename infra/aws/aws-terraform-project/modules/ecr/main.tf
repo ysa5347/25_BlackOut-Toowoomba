@@ -1,4 +1,4 @@
-resource "aws_ecr_repository" "25_blackout_toowoomba" {
+resource "aws_ecr_repository" "blackout_toowoomba" {
   name                 = var.repository_name
   image_tag_mutability = "MUTABLE"
   lifecycle_policy {
@@ -16,8 +16,4 @@ resource "aws_ecr_repository" "25_blackout_toowoomba" {
       }
     }
   }
-}
-
-output "repository_uri" {
-  value = aws_ecr_repository.backend.repository_url
 }

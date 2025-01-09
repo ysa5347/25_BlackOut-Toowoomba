@@ -25,30 +25,6 @@ resource "aws_iam_role_policy_attachment" "ecs_task_execution_policy" {
   role       = aws_iam_role.ecs_task_execution_role.name
 }
 
-resource "aws_ecs_task_definition" "this" {
-  family                   = var.task_family
-  execution_role_arn      = aws_iam_role.ecs_task_execution_role.arn
-  network_mode            = "awsvpc"
-  requires_compatibilities = ["FARGATE"]
-  cpu                     = var.cpu
-  memory                  = var.memory
-
-  container_definitions = jsonencode([
-    {
-      name      = var.container_name
-      image     = var.ecr_repository_uri
-      essential = true
-      portMappings = [
-        {
-          containerPort = var.container_port
-          hostPort      = var.container_port
-          protocol      = "tcp"
-        },
-      ]
-    },
-  ])
-}
-
 resource "aws_ecs_service" "this" {
   name            = var.service_name
   cluster         = aws_ecs_cluster.this.id
@@ -58,7 +34,33 @@ resource "aws_ecs_service" "this" {
 
   network_configuration {
     subnets          = var.public_subnet_ids
-    security_groups  = var.security_group_ids
+    security_groups  = [aws_security_group.ecs_sg.id]
     assign_public_ip = true
   }
+
+  depends_on = [aws_ecs_task_definition.this]
+}
+
+resource "aws_ecs_task_definition" "this" {
+  family                   = var.task_family
+  execution_role_arn      = aws_iam_role.ecs_task_execution_role.arn
+  requires_compatibilities = ["FARGATE"]
+  network_mode             = "awsvpc"
+  cpu                      = var.cpu
+  memory                   = var.memory
+
+  container_definitions = jsonencode([
+    {
+      name      = var.container_name
+      image     = var.container_image
+      essential = true
+      portMappings = [
+        {
+          containerPort = var.container_port
+          hostPort      = var.container_port
+          protocol      = "tcp"
+        }
+      ]
+    }
+  ])
 }

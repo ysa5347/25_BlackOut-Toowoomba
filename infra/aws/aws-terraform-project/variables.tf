@@ -22,7 +22,7 @@ variable "private_subnet_cidrs" {
 
 variable "ecr_repository_name" {
   description = "The name of the ECR repository"
-  default     = "25-blackout-toowoomba"
+  default     = "blackout-toowoomba"
 }
 
 variable "ecs_cluster_name" {
