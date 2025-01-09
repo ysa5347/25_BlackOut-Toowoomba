@@ -1,0 +1,33 @@
+FROM ubuntu
+
+WORKDIR /
+ARG DEBIAN_FRONTEND=noninteractive
+ENV TZ=Asia/Seoul
+
+RUN apt-get -y upgrade && apt-get -y update
+RUN ln -sf /usr/share/zoneinfo/Asia/Seoul /etc/localtime
+
+RUN apt-get install -y git\
+    dnsutils\
+    tzdata\
+    libmysqlclient-dev\
+    screen
+RUN apt install -y python3\
+    python3-pip
+    
+ARG BRANCH
+
+RUN echo $BRANCH\
+    echo DEBIAN_FRONTEND
+
+RUN git clone -b $BRANCH https://github.com/ysa5347/25_BlackOut-Toowoomba.git
+RUN ls
+
+# env file은 github workflow에서 생성.
+# COPY /.env /25_BlackOut-Toowoomba/backend/
+# 이제 Entrypoint에서 실행할 때 환경변수를 Parameter Store를 통해 받아와서 .env 생성하도록 변경.
+COPY /requirements.txt /25_BlackOut-Toowoomba/backend/
+
+RUN pip install -r ./25_BlackOut-Toowoomba/requirements.txt
+
+ENTRYPOINT sh ./25_BlackOut-Toowoomba/server.sh
