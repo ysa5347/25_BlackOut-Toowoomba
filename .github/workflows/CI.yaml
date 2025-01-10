@@ -1,0 +1,115 @@
+name: pull request detection
+
+on:
+  pull_request:
+    types: [closed]
+    branches: [ "main", "stage" ]        
+
+env:
+  AWS_REGION: ap-northeast-2
+  ECR_REPOSITORY: 25_blackout-toowoomba-repository
+  
+
+permissions:
+  contents: read
+
+jobs:
+  check_changes:
+    if: github.event.pull_request.merged == true
+    name: check_change
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v4
+      with: 
+        ref: ${{ github.event.pull_request.head_ref }}
+    
+    - name: Get base_ref
+      id: vars
+      with:
+        target_branch: ${{ github.event.pull_request.base_ref }}
+      run: |
+        echo "base_ref=${{ github.event.pull_request.base_ref }}" >> $GITHUB_OUTPUT
+    
+    - name: side filter
+      id: filter
+      uses: dorny/paths-filter@v2
+      with:
+        filters: |
+          front:
+            - 'front/**'
+          back:
+            - 'back/**'
+    outputs:
+      front: ${{ steps.filter.outputs.front }}
+      back: ${{ steps.filter.outputs.back }}
+  
+  CI:
+    name: CI
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v4
+      with: 
+        ref: ${{ github.event.pull_request.head_ref }}
+
+    - name: Set vars and outputs
+      id: vars
+      with:
+        target_branch: ${{ github.event.pull_request.base_ref }}
+      run: |
+        echo "sha_short=$(git rev-parse --short HEAD)" >> $GITHUB_OUTPUT
+
+    - name: Check sha outputs
+      run: echo ${{ steps.vars.outputs.sha_short }}
+
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v1
+
+    - name: Configure AWS credentials
+      uses: aws-actions/configure-aws-credentials@v1
+      with:
+        aws-access-key-id: ${{ secrets.BUILDER_AWS_ACCESS_KEY_ID }}
+        aws-secret-access-key: ${{ secrets.BUILDER_AWS_SECRET_ACCESS_KEY }}
+        aws-region: ${{ env.AWS_REGION }}
+    
+    - name: Login to Amazon ECR
+      id: login-ecr
+      uses: aws-actions/amazon-ecr-login@v1
+
+    - name: Create .env file
+      if: needs.check_changes.outputs.back == 'true'
+      env:
+        SECRETS_CONTEXT: ${{ secrets.DB_CONNECTION_ENV }}
+      run: |
+        echo $SECRETS_CONTEXT > .env
+
+    - name: Build, tag, and push image to Amazon ECR; backend
+      if: needs.check_changes.outputs.back == 'true'
+      id: build-push-back
+      env:
+        ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+        sha: ${{ steps.vars.outputs.sha_short }}
+        branch: ${{ github.event.pull_request.base_ref }}
+        claim_branch: ${{ github.ref_name }}
+      run: |
+        cd /home/runner/work/25_BlackOut-Toowoomba/25_BlackOut-Toowoomba/backend
+        docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:${{ env.target_branch }}-${{ env.claim_branch }}-back-${{ env.sha }} --build-arg BRANCH=${{ env.branch }} .
+        docker push $ECR_REGISTRY/$ECR_REPOSITORY:${{ env.target_branch }}-${{ env.claim_branch }}-back-${{ env.sha }}
+        echo "::set-output name=image::$ECR_REGISTRY/$ECR_REPOSITORY:${{ env.target_branch }}-${{ env.claim_branch }}-back-${{ env.sha }}"
+
+    - name: Build, tag, and push image to Amazon ECR; frontend
+      if: needs.check_changes.outputs.front == 'true'
+      id: build-push-front
+      env:
+        ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+        sha: ${{ steps.vars.outputs.sha_short }}
+        branch: ${{ github.event.pull_request.base_ref }}
+        claim_branch: ${{ github.ref_name }}
+      run: |
+        cd /home/runner/work/25_BlackOut-Toowoomba/25_BlackOut-Toowoomba/frontend
+        docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:${{ env.target_branch }}-${{ env.claim_branch }}-front-${{ env.sha }} --build-arg BRANCH=${{ env.branch }} .
+        docker push $ECR_REGISTRY/$ECR_REPOSITORY:${{ env.target_branch }}-${{ env.claim_branch }}-front-${{ env.sha }}
+        echo "::set-output name=image::$ECR_REGISTRY/$ECR_REPOSITORY:${{ env.target_branch }}-${{ env.claim_branch }}-front-${{ env.sha }}"
