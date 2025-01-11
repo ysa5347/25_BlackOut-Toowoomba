@@ -27,8 +27,6 @@ jobs:
     
     - name: Get base_ref
       id: vars
-      with:
-        target_branch: ${{ github.event.pull_request.base_ref }}
       run: |
         echo "base_ref=${{ github.event.pull_request.base_ref }}" >> $GITHUB_OUTPUT
     
