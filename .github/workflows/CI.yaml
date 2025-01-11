@@ -55,8 +55,6 @@ jobs:
 
     - name: Set vars and outputs
       id: vars
-      with:
-        target_branch: ${{ github.event.pull_request.base_ref }}
       run: |
         echo "sha_short=$(git rev-parse --short HEAD)" >> $GITHUB_OUTPUT
 
