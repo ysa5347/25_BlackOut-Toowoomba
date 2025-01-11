@@ -29,7 +29,7 @@ jobs:
       id: vars
       with:
         target_branch: ${{ github.event.pull_request.base_ref }}
-      runs: |
+      run: |
         echo "base_ref=${{ github.event.pull_request.base_ref }}" >> $GITHUB_OUTPUT
     
     - name: side filter
