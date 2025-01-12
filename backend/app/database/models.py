@@ -13,9 +13,15 @@ class User(base):
     score = Column(Integer, default=100)
 
     daylimit = Column(Integer, default=3)
-
+    friends_list = Column()
     is_active = Column(Boolean, default=True)
     is_superuser = Column(Boolean, default=False)
+
+class Friends(base):
+    __tablename__ = "friends"
+
+    friend_uid = Column(Integer, ForeignKey('user.uid'), primary_key=True)
+    uid = Column(Integer, ForeignKey('user.uid'))
 
 class Coupons(base):
     __tablename__ = "coupons"
@@ -61,6 +67,7 @@ class Transaction(base):
     end_lat = Column(Float, nullable=True)
     end_lng = Column(Float, nullable=True)
     start_time = Column(DateTime)
+    score = Column(Float, nullable=True)
     status = Column(Enum("active", "completed", "cancelled", "refunded", "pending"), default="pending")
     is_active = Column(Boolean, default=True)
     is_completed = Column(Boolean, default=False)
@@ -68,4 +75,3 @@ class Transaction(base):
     is_refunded = Column(Boolean, default=False)
     is_reviewed = Column(Boolean, default=False)
     review = Column(Text)
-    rating = Column(Integer)

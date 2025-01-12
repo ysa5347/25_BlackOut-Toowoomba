@@ -67,6 +67,7 @@ def create_test_data(session: Session):
             end_lat=None if random.choice([True, False]) else fake.latitude(),
             end_lng=None if random.choice([True, False]) else fake.longitude(),
             start_time=fake.date_time_between(start_date="-1y", end_date="now"),
+            score = random.randint(50, 150),
             status=random.choice(["active", "completed", "cancelled", "refunded", "pending"]),
             is_active=random.choice([True, False]),
             is_completed=random.choice([True, False]),
@@ -74,7 +75,6 @@ def create_test_data(session: Session):
             is_refunded=random.choice([True, False]),
             is_reviewed=random.choice([True, False]),
             review=fake.text(),
-            rating=random.randint(1, 5)
         )
         session.add(transaction)
 
