@@ -4,6 +4,7 @@ from sklearn.cluster import DBSCAN
 import matplotlib.pyplot as plt
 import pickle
 
+# in local
 def generate_sample_data_50():
     np.random.seed(42)
     
@@ -30,6 +31,11 @@ def detect_outliers_with_dbscan_50(data, eps=0.3, min_samples=3):
     with open('dbscan_model.pkl', 'wb') as f:
         pickle.dump(dbscan, f)
     return data
+
+def count_outliers(data):
+    # cluster가 -1이 아닌 데이터 포인트가 이상치입니다
+    outliers_count = len(data[data['cluster'] != -1])
+    return outliers_count
 
 def plot_routes_2d_50(data):
     plt.figure(figsize=(12, 8))
@@ -62,9 +68,17 @@ def plot_routes_2d_50(data):
         'outlier_points': {
             'data': outliers.to_dict('records'),
             'count': len(outliers)
-        }
+        },
+        'outlier_count': count_outliers(data)
     }
     return result
+
+def score3(sample_data: list) -> list[int]:
+    data = generate_sample_data_50()
+    data_with_clusters = detect_outliers_with_dbscan_50(data)
+    results = plot_routes_2d_50(data_with_clusters)
+    weight = -0.1
+    return results['outlier_count'] * weight
 
 # 실행
 #data_50 = generate_sample_data_50()

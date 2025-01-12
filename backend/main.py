@@ -5,7 +5,7 @@ from app.database.conn import engine, session
 from app.database import models
 import json
 import requests
-from utils.func1 import score1
+from utils.score import score
 
 models.base.metadata.create_all(bind=engine)
 app = FastAPI()
@@ -83,7 +83,7 @@ async def transaction(requests, db: Session = get_db()):
 # peering search request API
 # GET /transaction/peering; body: {id: str}
 @app.get("/transaction/peering")
-async def peering(requests):
+async def peering(requests, db: Session = get_db()):
     requests = json.loads(requests)
     transaction = db.query(models.Transaction).filter(models.Transaction.id == requests['body'].id).first()
     if transaction is None:
@@ -91,9 +91,3 @@ async def peering(requests):
     peer_transactions = db.query(models.Transaction).filter((models.Transaction.start_lat - transaction.start_lat < 0.0001) and (models.Transaction.start_lng - transaction.start_lng < 0.0001)).all()
     friends_transactions = peer_transactions.filter(models.Transaction.uid in db.query(models.Friends).filter(models.Friends.uid == transaction.uid).all())
     return {[transaction.id for transaction in friends_transactions]}
-
-
-@app.get("/score1")
-async def func1():
-    sample_data = [10, 30, 90, -50, 70]
-    return score1(sample_data)

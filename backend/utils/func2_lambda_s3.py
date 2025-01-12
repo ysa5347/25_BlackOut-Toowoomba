@@ -2,6 +2,7 @@ import boto3
 import base64
 import json
 
+# in aws lambda
 def lambda_handler(event, context):
     s3_client = boto3.client('s3', region_name='us-east-1')
     lambda_client = boto3.client('lambda', region_name='us-east-1')
@@ -28,13 +29,21 @@ def lambda_handler(event, context):
 
         # Lambda 2 응답 읽기
         response_payload = json.load(response['Payload'])
-        print(response_payload)
-
+        
+        is_Positive = None
+        positive_corpus = ['네', '예','맞습니다.']
+        negative_corpus = ['아니요', '아닙니다.']
+        if response_payload in positive_corpus:
+            is_Positive = True
+        elif response_payload in negative_corpus:
+            is_Positive = False
+        
         return {
             "statusCode": 200,
             "body": json.dumps({
                 "message": "Api Results!",
-                "response": response_payload
+                "response": response_payload,
+                "is_Positive": is_Positive
             })
         }
 
@@ -44,3 +53,8 @@ def lambda_handler(event, context):
             "statusCode": 500,
             "body": json.dumps({"error": str(e)})
         }
+
+def score2(sample_data: int) -> int:
+    results = lambda_handler(sample_data)
+    weight = 10
+    return results['is_Positive'] * weight
