@@ -13,7 +13,6 @@ class User(base):
     score = Column(Integer, default=100)
 
     daylimit = Column(Integer, default=3)
-    friends_list = Column()
     is_active = Column(Boolean, default=True)
     is_superuser = Column(Boolean, default=False)
 
@@ -52,7 +51,7 @@ class Bicycle(base):
     created_at = Column(DateTime)
     updated_at = Column(DateTime)
     deleted_at = Column(DateTime, nullable=True)
-x
+
 class Transaction(base):
     __tablename__ = "transactions"
 

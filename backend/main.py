@@ -48,6 +48,7 @@ def give_coupon(uid: int, code: str, name: str, value: int, type: str = "percent
 
 @app.post("/score")
 async def score(requests):
+    db = session()
     requests = json.loads(requests)
     transaction = db.query(models.Transaction).filter(models.Transaction.id == requests['body'].id).first()
     if transaction is None:
@@ -55,17 +56,6 @@ async def score(requests):
     transaction.score = requests['body'].score
     db.commit()
     return {"message": "Score updated"}
-
-Class Transaction(BaseModel):
-    uid: int,
-    bid: int,
-    cid: int,
-    start_lat: float,
-    start_lng: float,
-    created_at: datetime.datetime,
-    updated_at: datetime.datetime,
-    status: str,
-    start_time: datetime.datetime
 
 # POST /user; body: {uid: int, email: str, hashed_password: str, exp: int, level: int, score: int, daylimit: int, friends_list: list, is_active: bool, is_superuser: bool}
 @app.get("/transaction/{id}")
