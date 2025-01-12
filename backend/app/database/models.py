@@ -55,7 +55,7 @@ class Bicycle(base):
 class Transaction(base):
     __tablename__ = "transactions"
 
-    id = Column(String, primary_key=True, index=True)                       # s3 bucket object key; Trans-<id>
+    id = Column(String(255), primary_key=True, index=True)                       # s3 bucket object key; Trans-<id>
     uid = Column(Integer, ForeignKey('user.uid'))
     bid = Column(Integer, ForeignKey('bicycles.bid'))
     cid = Column(Integer, ForeignKey('coupons.id'))
